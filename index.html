@@ -106,7 +106,7 @@
 <body>
 <header>
   <h1><span>✧</span> Stickerbox <span>✧</span></h1>
-  <p>Choose your stickers</p>
+  <p>by @phuwinful</p>
 </header>
 
 <main>
@@ -149,6 +149,7 @@
     </div>
     <button id="save">Save image ♡</button>
   </section>
+  <p id="stats" style="text-align:center;font-size:.6rem;opacity:.5;margin:0"></p>
 </main>
 
 <div id="zoomBar">
@@ -183,6 +184,7 @@
 ❤︎
 ≽^• ˕ • ྀི≼
 (⸝⸝> ᴗ•⸝⸝)
+(⸝⸝> ᴗ <⸝⸝)
 ( ˘͈ ᵕ ˘͈♡)
 (╥ ᴗ ╥)
 ( •̯́ ₃ •̯̀)
@@ -265,9 +267,9 @@
 (˃ᆺ˂)
 ⌯'-'⌯
 =^._.^= ∫
-/ᐠ-ꞈ-ᐟ\
+/ᐠ-_-ᐟ\
 ₍^⸝⸝ᴗ ᴗ⸝⸝^₎
-/ᐠ｡ꞈ｡ᐟ\
+/ᐠ｡_｡ᐟ\
 ૮ ․ ․ ྀིა
 •ᴗ•
 </script>
@@ -291,6 +293,11 @@ const cc = document.querySelector('.canvas-container');
 cc.appendChild(document.getElementById('previewBtn'));
 cc.appendChild(document.getElementById('drop'));
 document.getElementById('dropBtn').onclick = () => document.getElementById('photo').click();
+
+fetch('https://stickerbox.goatcounter.com/counter/TOTAL.json')
+  .then(r => r.json())
+  .then(d => { document.getElementById('stats').textContent = d.count + ' visits'; })
+  .catch(() => {});
 
 // Size the canvas to the photo's shape and the available space, and rescale stickers with it
 function layout() {
@@ -483,6 +490,7 @@ sizeEl.oninput = e => {
 // ---------- Save (full photo quality) ----------
 document.getElementById('save').onclick = async () => {
   canvas.discardActiveObject().renderAll();
+    if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: 'saved-image', title: 'Saved image', event: true });
   const url = canvas.toDataURL({ format: 'png', multiplier: state.exportW / canvas.getWidth() });
   const blob = await (await fetch(url)).blob();
   const file = new File([blob], 'stickerbox.png', { type: 'image/png' });
@@ -495,5 +503,6 @@ document.getElementById('save').onclick = async () => {
 layout();
 window.addEventListener('load', layout);
 </script>
+<script data-goatcounter="https://stickerbox.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </body>
 </html>
