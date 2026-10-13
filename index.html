@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stickerbox</title>
+<style>
+  :root { --bg:#efe9ff; --ink:#241b3a; --accent:#ff5fa2; --card:#ffffff; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font-family:"Avenir Next","Trebuchet MS",system-ui,sans-serif; }
+  header { padding:20px 16px 4px; max-width:900px; margin:0 auto; }
+  h1 { margin:0; font-size:1.8rem; }
+  header p { margin:4px 0 0; opacity:.75; }
+  main { display:flex; flex-wrap:wrap; gap:16px; padding:16px; max-width:900px; margin:0 auto; }
+  .stage { background:var(--card); padding:8px; border-radius:16px; align-self:flex-start; }
+  .panel { flex:1; min-width:260px; background:var(--card); padding:16px; border-radius:16px; }
+  h2 { font-size:1rem; margin:16px 0 8px; }
+  .row { display:flex; flex-wrap:wrap; gap:8px; }
+  .btn, button { font:inherit; border:0; border-radius:999px; padding:10px 16px; cursor:pointer;
+                 background:var(--ink); color:#fff; }
+  .btn.alt, button.alt { background:#e6defa; color:var(--ink); }
+  #save { background:var(--accent); width:100%; margin-top:20px; padding:14px; font-weight:700; }
+  .grid { display:flex; flex-wrap:wrap; gap:6px; }
+  .grid button { background:#f4f0ff; color:inherit; font-size:1.6rem; padding:6px 10px; border-radius:12px; }
+  .grid button svg { width:28px; height:28px; display:block; }
+  .hint { font-size:.85rem; opacity:.7; margin:10px 0 0; }
+  button:focus-visible, .btn:focus-within { outline:3px solid var(--accent); outline-offset:2px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Stickerbox</h1>
+  <p>Put stars, emoji and PNGs on your photo, then save it. No login.</p>
+</header>
+
+<main>
+  <div class="stage"><canvas id="c" width="360" height="640"></canvas></div>
+
+  <section class="panel">
+    <div class="row">
+      <label class="btn">Add photo<input id="photo" type="file" accept="image/*" hidden></label>
+      <label class="btn alt">Add PNG<input id="png" type="file" accept="image/*" hidden></label>
+    </div>
+    <p class="hint">Copied a PNG from X? Click this page and press Cmd+V (Ctrl+V on Windows).</p>
+
+    <h2>Emoji</h2>
+    <div id="emoji" class="grid"></div>
+
+    <h2>Shapes</h2>
+    <div id="shapes" class="grid"></div>
+
+    <h2>Selected sticker</h2>
+    <div class="row">
+      <input id="color" type="color" value="#ffd84d" aria-label="Shape color">
+      <button class="alt" id="dup">Duplicate</button>
+      <button class="alt" id="front">Bring front</button>
+      <button class="alt" id="back">Send back</button>
+      <button class="alt" id="del">Delete</button>
+    </div>
+    <p class="hint">Color works on the Shapes. Drag corners to resize, top handle to rotate.</p>
+
+    <button id="save">Save image</button>
+  </section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+<script>
+const W = 360, H = 640; // 9:16, exported at 3x = 1080x1920 (IG story size)
+const canvas = new fabric.Canvas('c', { preserveObjectStacking: true });
+
+// Shrink the canvas on small screens (CSS only, export stays full size)
+function fit() {
+  const s = Math.min(1, (window.innerWidth - 48) / W);
+  canvas.setDimensions({ width: (W * s) + 'px', height: (H * s) + 'px' }, { cssOnly: true });
+}
+window.addEventListener('resize', fit); fit();
+
+// ---------- Photo (background) ----------
+function setPhoto(src) {
+  fabric.Image.fromURL(src, img => {
+    const s = Math.max(W / img.width, H / img.height); // cover the canvas
+    img.set({ scaleX: s, scaleY: s, left: W / 2, top: H / 2, originX: 'center', originY: 'center' });
+    canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas));
+  });
+}
+
+// ---------- Stickers ----------
+function place(obj, width) {
+  if (width) obj.scaleToWidth(width);
+  obj.set({ left: W / 2, top: H / 2, originX: 'center', originY: 'center' });
+  canvas.add(obj); canvas.setActiveObject(obj); canvas.requestRenderAll();
+}
+function addPng(src) {
+  fabric.Image.fromURL(src, img => place(img, 120));
+}
+function addEmoji(ch) {
+  place(new fabric.Text(ch, { fontSize: 80 }));
+}
+const SVG = (path, fill) =>
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="${path}" fill="${fill}"/></svg>`;
+const SHAPES = {
+  star:    SVG('M50 5l14 31 33 4-25 23 7 33-29-17-29 17 7-33L3 40l33-4z', '#ffd84d'),
+  sparkle: SVG('M50 0C54 30 70 46 100 50 70 54 54 70 50 100 46 70 30 54 0 50 30 46 46 30 50 0z', '#ffd84d'),
+  heart:   SVG('M50 90C10 60 0 40 0 28 0 12 12 2 26 2c10 0 20 6 24 14C54 8 64 2 74 2c14 0 26 10 26 26 0 12-10 32-50 62z', '#ff6b9a')
+};
+function addShape(svg) {
+  fabric.loadSVGFromString(svg, (objs, opts) => {
+    const g = fabric.util.groupSVGElements(objs, opts);
+    g.isShape = true;
+    place(g, 110);
+  });
+}
+function recolor(obj, color) {
+  const paint = o => o.set('fill', color);
+  obj.type === 'group' ? obj.getObjects().forEach(paint) : paint(obj);
+  canvas.requestRenderAll();
+}
+
+// ---------- Build the pickers ----------
+const emojiBox = document.getElementById('emoji');
+['✨','⭐','🌟','💫','💖','🎀','🌸','🦋','🐱','🐾','🔥','🍒','😎','🥹','☁️','🌙','🫶','🧿']
+  .forEach(ch => {
+    const b = document.createElement('button');
+    b.textContent = ch; b.onclick = () => addEmoji(ch); emojiBox.appendChild(b);
+  });
+const shapeBox = document.getElementById('shapes');
+Object.entries(SHAPES).forEach(([name, svg]) => {
+  const b = document.createElement('button');
+  b.innerHTML = svg; b.title = name; b.onclick = () => addShape(svg); shapeBox.appendChild(b);
+});
+
+// ---------- Inputs ----------
+document.getElementById('photo').onchange = e => {
+  const f = e.target.files[0]; if (f) setPhoto(URL.createObjectURL(f));
+};
+document.getElementById('png').onchange = e => {
+  const f = e.target.files[0]; if (f) addPng(URL.createObjectURL(f));
+};
+// Paste a copied image (or emoji text) straight in
+window.addEventListener('paste', e => {
+  const items = [...(e.clipboardData?.items || [])];
+  const img = items.find(i => i.type.startsWith('image/'));
+  if (img) { addPng(URL.createObjectURL(img.getAsFile())); return; }
+  const text = e.clipboardData?.getData('text')?.trim();
+  if (text) addEmoji(text.slice(0, 8));
+});
+// Drag and drop a photo onto the page
+window.addEventListener('dragover', e => e.preventDefault());
+window.addEventListener('drop', e => {
+  e.preventDefault();
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('image/')) setPhoto(URL.createObjectURL(f));
+});
+
+// ---------- Selected sticker controls ----------
+const active = () => canvas.getActiveObject();
+document.getElementById('color').oninput = e => { const o = active(); if (o && o.isShape) recolor(o, e.target.value); };
+document.getElementById('front').onclick = () => { const o = active(); if (o) { canvas.bringToFront(o); canvas.requestRenderAll(); } };
+document.getElementById('back').onclick  = () => { const o = active(); if (o) { canvas.sendToBack(o);  canvas.requestRenderAll(); } };
+document.getElementById('del').onclick   = () => { const o = active(); if (o) canvas.remove(o); };
+document.getElementById('dup').onclick   = () => {
+  const o = active(); if (!o) return;
+  o.clone(c => { c.isShape = o.isShape; c.set({ left: o.left + 20, top: o.top + 20 }); canvas.add(c); canvas.setActiveObject(c); });
+};
+window.addEventListener('keydown', e => {
+  if ((e.key === 'Delete' || e.key === 'Backspace') && active() && !active().isEditing) canvas.remove(active());
+});
+
+// ---------- Save ----------
+document.getElementById('save').onclick = async () => {
+  canvas.discardActiveObject().renderAll();
+  const url = canvas.toDataURL({ format: 'png', multiplier: 3 });
+  const blob = await (await fetch(url)).blob();
+  const file = new File([blob], 'stickerbox.png', { type: 'image/png' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file] }); return; } catch (err) { /* fall back to download */ }
+  }
+  const a = document.createElement('a'); a.href = url; a.download = 'stickerbox.png'; a.click();
+};
+</script>
+</body>
+</html>
