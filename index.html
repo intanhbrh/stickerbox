@@ -85,7 +85,17 @@
           font-size:1.05rem; box-shadow:0 4px 0 #b83a74; }
   #save:active { box-shadow:0 1px 0 #b83a74; }
   button:focus-visible, .btn:focus-within { outline:3px solid var(--accent); outline-offset:2px; }
-
+ 
+  /* zoom & edit mode */
+  body.zoom { overflow:hidden; }
+  body.zoom .stage { position:fixed; inset:0; z-index:9; border-radius:0; box-shadow:none;
+                     background:rgba(20,12,35,.95); padding:12px 12px 100px; align-items:center; }
+  #zoomBar { display:none; position:fixed; left:0; right:0; bottom:0; z-index:12; align-items:center; gap:10px;
+             padding:12px 14px calc(12px + env(safe-area-inset-bottom,0px));
+             background:var(--card); border-radius:20px 20px 0 0; box-shadow:0 -4px 0 var(--edge); }
+  body.zoom #zoomBar { display:flex; }
+  #zoomBar label { flex:1; display:flex; align-items:center; gap:10px; font-size:.75rem; min-width:0; }
+  #size { flex:1; min-width:0; accent-color:var(--accent); }
   @media (min-width:700px) {
     .stickers { width:240px; }
     .grid { grid-template-columns:repeat(4, 1fr); }
@@ -141,9 +151,10 @@
   </section>
 </main>
 
-<div id="preview" role="dialog" aria-label="Photo preview">
-  <img id="previewImg" alt="Preview of your finished photo">
-  <button class="alt" id="previewClose">Close</button>
+<div id="zoomBar">
+  <label>size <input id="size" type="range" min="5" max="100" value="25" disabled></label>
+  <button class="alt" id="zoomDel" aria-label="Delete">✕</button>
+  <button id="zoomDone">Done</button>
 </div>
 
 <!-- Emoticon list: one per line. To add more, just add a new line. -->
@@ -186,6 +197,7 @@
 ☾.˖
 εїз
 ఇ
+•̆ . •̆
 ⊂₍ •ᴥ• ₎っ
 ૮₍´｡･⩊･ ｡`₎ა
 ♡𓐍𓏸  ꫂ❁ ✮⋆˙
@@ -282,8 +294,9 @@ document.getElementById('dropBtn').onclick = () => document.getElementById('phot
 
 // Size the canvas to the photo's shape and the available space, and rescale stickers with it
 function layout() {
-  const availW = stage.clientWidth - 16;
-  const maxH = Math.min(window.innerHeight * 0.6, 560);
+    const zoom = document.body.classList.contains('zoom');
+  const availW = stage.clientWidth - (zoom ? 24 : 16);
+  const maxH = zoom ? window.innerHeight - 150 : Math.min(window.innerHeight * 0.6, 560);
   const w = Math.max(120, Math.round(Math.min(availW, maxH * state.aspect)));
   const h = Math.round(w / state.aspect);
   const rx = w / canvas.getWidth(), ry = h / canvas.getHeight();
@@ -301,17 +314,12 @@ window.addEventListener('resize', () => {
   if (window.innerWidth !== lastWidth) { lastWidth = window.innerWidth; layout(); }
 });
 
-// ---------- Full-photo preview ----------
-const previewEl = document.getElementById('preview');
-document.getElementById('previewBtn').onclick = () => {
-  canvas.discardActiveObject().renderAll();
-  document.getElementById('previewImg').src =
-    canvas.toDataURL({ format: 'png', multiplier: Math.min(2, state.exportW / canvas.getWidth()) });
-  previewEl.classList.add('open');
-};
-const closePreview = () => previewEl.classList.remove('open');
-previewEl.onclick = closePreview;
-window.addEventListener('keydown', e => { if (e.key === 'Escape') closePreview(); });
+// ---------- Zoom & edit mode ----------
+const setZoom = on => { document.body.classList.toggle('zoom', on); layout(); };
+document.getElementById('previewBtn').onclick = () => setZoom(!document.body.classList.contains('zoom'));
+document.getElementById('zoomDone').onclick = () => setZoom(false);
+document.getElementById('zoomDel').onclick = () => { const o = active(); if (o) canvas.remove(o); };
+window.addEventListener('keydown', e => { if (e.key === 'Escape') setZoom(false); });
 
 // ---------- Photo (background) ----------
 function setPhoto(src) {
@@ -381,7 +389,7 @@ function recolor(obj, color) {
 
 // ---------- Build the sticker column ----------
 const emojiBox = document.getElementById('emoji');
-['✨','⭐','🌟','💫','💖','🎀','🌸','🦋','🐱','😺','🐾','🔥','🍒','😎','🥹','☁️','☁︎','🌙','🫶','🧿',
+['✨','⭐','🌟','💫','💖','🎀','🌸','🦋','🐱','😺','🐾','🔥','😎','🥹','☁️','☁︎','🌙','🫶','🧿',
  '🍓','🍒','🌈','🎧','💌','👑','🪩','🕊️','🍀','🧸','💋','🌷','🫧','💗','🖤','🤍']
   .forEach(ch => {
     const b = document.createElement('button');
@@ -458,7 +466,20 @@ const controls = document.getElementById('controls');
 const syncTools = () => controls.classList.toggle('off', !active());
 ['selection:created', 'selection:updated', 'selection:cleared'].forEach(ev => canvas.on(ev, syncTools));
 syncTools();
-
+// Size slider: sets the selected sticker's width as % of the photo
+const sizeEl = document.getElementById('size');
+const syncSize = () => {
+  const o = active();
+  sizeEl.disabled = !o;
+  if (o) sizeEl.value = Math.round(o.getScaledWidth() / canvas.getWidth() * 100);
+};
+['selection:created', 'selection:updated', 'selection:cleared', 'object:scaling', 'object:modified']
+  .forEach(ev => canvas.on(ev, syncSize));
+sizeEl.oninput = e => {
+  const o = active(); if (!o) return;
+  o.scaleToWidth(canvas.getWidth() * e.target.value / 100);
+  o.setCoords(); canvas.requestRenderAll();
+};
 // ---------- Save (full photo quality) ----------
 document.getElementById('save').onclick = async () => {
   canvas.discardActiveObject().renderAll();
