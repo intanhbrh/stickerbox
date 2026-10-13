@@ -231,6 +231,7 @@
 ☕ 𓍢ִ໋ 𓍢ִ໋ 🥐 ✧˖°
 𑣲𝄞
 ★彡
+˚.⋆꒰১ ໒꒱⋆.˚
 ꒰ ⑅ ʚ♡ɞ ⑅ ꒱
 ˚ ༘ ☾ ｡ﾟ☁︎｡⋆
 𓆝 𓆟 𓆞 𓆝 𓆟
@@ -379,25 +380,39 @@ const SHAPES = {
   paw:     SVG('M12 44a10 10 0 1 0 20 0a10 10 0 1 0 -20 0zM30 24a10 10 0 1 0 20 0a10 10 0 1 0 -20 0zM50 24a10 10 0 1 0 20 0a10 10 0 1 0 -20 0zM68 44a10 10 0 1 0 20 0a10 10 0 1 0 -20 0zM28 68a22 22 0 1 0 44 0a22 22 0 1 0 -44 0z', '#b79cff'),
   cat:     SVG('M14 60a36 36 0 1 0 72 0a36 36 0 1 0 -72 0zM15 48L47 28L18 8zM85 48L82 8L53 28z', '#ffb3d1'),
   bolt:    SVG('M58 3L18 55h26l-8 42 44-56H54z', '#ffd84d'),
-  diamond: SVG('M50 3L95 50L50 97L5 50z', '#9fd8ff')
+  diamond: SVG('M50 3L95 50L50 97L5 50z', '#9fd8ff'),
+  blush3:  SVG('M19.2 79.7L35.2 29.7A5.5 5.5 0 0 0 24.8 26.3L8.8 76.3A5.5 5.5 0 0 0 19.2 79.7zM45.2 79.7L61.2 29.7A5.5 5.5 0 0 0 50.8 26.3L34.8 76.3A5.5 5.5 0 0 0 45.2 79.7zM71.2 79.7L87.2 29.7A5.5 5.5 0 0 0 76.8 26.3L60.8 76.3A5.5 5.5 0 0 0 71.2 79.7z', '#ff8fb8'),
+  blush2:  SVG('M32.2 79.7L48.2 29.7A5.5 5.5 0 0 0 37.8 26.3L21.8 76.3A5.5 5.5 0 0 0 32.2 79.7zM58.2 79.7L74.2 29.7A5.5 5.5 0 0 0 63.8 26.3L47.8 76.3A5.5 5.5 0 0 0 58.2 79.7z', '#ff8fb8'),
+  glowcircle: SVG('M10 50a40 40 0 1 0 80 0a40 40 0 1 0 -80 0z', '#fff3b0'),
+  glowoval:   SVG('M22 50a28 40 0 1 0 56 0a28 40 0 1 0 -56 0z', '#ffc2dd')
 };
-function addShape(svg) {
+
+// Shapes that glow (name: glow color)
+const GLOW = { glowcircle: '#fff3b0', glowoval: '#ffc2dd' };
+
+function addShape(svg, name) {
   fabric.loadSVGFromString(svg, (objs, opts) => {
     const g = fabric.util.groupSVGElements(objs, opts);
     g.isShape = true;
+    if (GLOW[name]) {
+      g.glow = true;
+      g.set('shadow', new fabric.Shadow({ color: GLOW[name], blur: 30, offsetX: 0, offsetY: 0 }));
+    }
     place(g, canvas.getWidth() * 0.25);
   });
 }
+
 function recolor(obj, color) {
-  const paint = o => o.set('fill', color);
+  const paint = o => { o.set('fill', color); if (o.stroke) o.set('stroke', color); };
   obj.type === 'group' ? obj.getObjects().forEach(paint) : paint(obj);
+  if (obj.glow) obj.set('shadow', new fabric.Shadow({ color, blur: 30, offsetX: 0, offsetY: 0 }));
   canvas.requestRenderAll();
 }
 
 // ---------- Build the sticker column ----------
 const emojiBox = document.getElementById('emoji');
-['✨','⭐','🌟','💫','💖','🎀','🌸','🦋','🐱','😺','🐶','🐾','🔥','😎','🥹','☁️','☁︎','🌙','🫶','🧿',
- '🍓','🍒','🌈','🎧','💌','👑','🪩','🕊️','🍀','🧸','💋','🌷','🫧','💗','🖤','🤍']
+['✨','⭐','🌟','💫','💖','🎀','🍥','🌸','🌼','🐰ྀི','🧁','🪷','🦋','🐱','😺','🐶','🐾','🔥','😎','🥹','☁️','☁︎','🌙','🍑','🫶','🧿',
+ '🍓','🍒','🌈','🎧','💌','👑','🪩','🕊️','🍀','🧸','💋','🌷','🫧','💗','💛','❤️','💕','🖤','🤍','💚','🤎']
   .forEach(ch => {
     const b = document.createElement('button');
     b.textContent = ch; b.onclick = () => addEmoji(ch); emojiBox.appendChild(b);
@@ -416,7 +431,9 @@ emoticons.forEach(str => {
 const shapeBox = document.getElementById('shapes');
 Object.entries(SHAPES).forEach(([name, svg]) => {
   const b = document.createElement('button');
-  b.innerHTML = svg; b.title = name; b.onclick = () => addShape(svg); shapeBox.appendChild(b);
+  b.innerHTML = svg; b.title = name; b.onclick = () => addShape(svg, name);
+  if (GLOW[name]) b.firstElementChild.style.filter = `drop-shadow(0 0 4px ${GLOW[name]})`;
+  shapeBox.appendChild(b);
 });
 
 // ---------- Category tabs ----------
