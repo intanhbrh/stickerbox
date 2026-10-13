@@ -6,47 +6,84 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap">
 <title>Stickerbox</title>
 <style>
-  :root { --bg:#efe9ff; --ink:#241b3a; --accent:#ff5fa2; --card:#ffffff; }
-  * { box-sizing: border-box; }
-  body { margin:0; background:var(--bg); color:var(--ink);
-         font-family:"Silkscreen","Trebuchet MS",system-ui,sans-serif; }
-  header { padding:16px 12px 0; max-width:900px; margin:0 auto; }
-  h1 { margin:0; font-size:1.6rem; }
-  header p { margin:2px 0 0; opacity:.75; }
-  main { display:flex; flex-direction:column; gap:12px; padding:12px; max-width:900px; margin:0 auto; }
-  h2 { font-size:.85rem; margin:10px 0 6px; }
+  :root { --bg:#efe9ff; --ink:#241b3a; --accent:#ff5fa2; --card:#ffffff; --soft:#e6defa; --edge:#ddd3f8; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { margin:0; color:var(--ink);
+         font-family:"Silkscreen","Trebuchet MS",system-ui,sans-serif;
+         background-color:var(--bg);
+         background-image:radial-gradient(#dcd2f7 1.6px, transparent 1.6px);
+         background-size:20px 20px; }
+  header { padding:18px 12px 0; max-width:900px; margin:0 auto; text-align:center; }
+  h1 { margin:0; font-size:1.7rem; letter-spacing:.02em; }
+  h1 span { color:var(--accent); }
+  header p { margin:4px 0 0; opacity:.7; font-size:.85rem; }
+  main { display:flex; flex-direction:column; gap:14px; padding:14px 12px 28px; max-width:900px; margin:0 auto; }
   .row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .row.center { justify-content:center; }
+
+  /* buttons: chunky, press down when tapped */
   .btn, button { font:inherit; border:0; border-radius:999px; padding:10px 16px; cursor:pointer;
-                 background:var(--ink); color:#fff; }
-  .btn.alt, button.alt { background:#e6defa; color:var(--ink); }
+                 background:var(--ink); color:#fff; box-shadow:0 3px 0 rgba(36,27,58,.35); }
+  .btn.alt, button.alt { background:var(--soft); color:var(--ink); box-shadow:0 3px 0 #b9acd9; }
+  .btn:active, button:active { transform:translateY(2px); box-shadow:0 1px 0 rgba(36,27,58,.35); }
+
+  /* category tabs */
+  .tabs { display:flex; gap:8px; }
+  .tab { flex:1; padding:11px 6px; background:var(--card); color:var(--ink); font-size:.85rem;
+         box-shadow:0 3px 0 var(--edge); }
+  .tab.on { background:var(--accent); color:#fff; box-shadow:0 3px 0 #b83a74; }
 
   /* photo on the left, scrolling sticker column on the right */
   .editor { display:flex; gap:10px; }
-      .stage { flex:1; min-width:0; min-height:280px; background:var(--card); padding:8px;
-           border-radius:16px; display:flex; justify-content:center; align-items:flex-start; }
+  .stage { flex:1; min-width:0; min-height:280px; background:var(--card); padding:8px;
+           border-radius:20px; box-shadow:0 5px 0 var(--edge);
+           display:flex; justify-content:center; align-items:flex-start; }
+  .canvas-container { border-radius:12px; overflow:hidden;
+           background:repeating-conic-gradient(#f4f0ff 0 25%, #ffffff 0 50%) 50% / 16px 16px; }
   .preview-btn { position:absolute; right:8px; bottom:8px; z-index:5; width:26px; height:26px;
                  padding:0; border:0; border-radius:50%; background:rgba(0,0,0,.45); color:#fff;
-                 font-size:12px; line-height:1; white-space:nowrap; display:grid; place-items:center; }
+                 font-size:12px; line-height:1; white-space:nowrap; display:grid; place-items:center;
+                 box-shadow:none; }
+  .drop { position:absolute; inset:0; z-index:4; display:flex; flex-direction:column; align-items:center;
+          justify-content:center; gap:10px; text-align:center; font-size:.75rem; opacity:.85;
+          pointer-events:none; padding:12px; }
+  .drop[hidden] { display:none; }
+  .drop button { pointer-events:auto; background:var(--accent); color:#fff; box-shadow:0 3px 0 #b83a74; }
   #preview { position:fixed; inset:0; z-index:10; background:rgba(20,12,35,.92); display:none;
              flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:16px; }
   #preview.open { display:flex; }
   #preview img { max-width:100%; max-height:calc(100% - 70px); object-fit:contain; border-radius:12px; }
 
-  .stickers { position:relative; width:128px; flex:none; background:var(--card); border-radius:16px; }
-  .stickers .scroll { position:absolute; inset:0; overflow-y:auto; padding:4px 8px 8px;
+  .stickers { position:relative; width:128px; flex:none; background:var(--card); border-radius:20px;
+              box-shadow:0 5px 0 var(--edge); }
+  .stickers .scroll { position:absolute; inset:0; overflow-y:auto; padding:10px 8px;
                       -webkit-overflow-scrolling:touch; }
   .grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:6px; }
-  .grid button { background:#f4f0ff; color:inherit; font-size:1.5rem; line-height:1.2;
-                 padding:6px 0; border-radius:12px; }
+  .grid[hidden] { display:none; }
+  .grid button { font-family:system-ui,sans-serif; background:#f4f0ff; color:inherit; font-size:1.5rem;
+                 line-height:1.2; padding:6px 0; border-radius:14px; box-shadow:0 2px 0 var(--edge); }
   .grid button svg { width:26px; height:26px; display:block; margin:0 auto; }
   /* emoticons: one per row, text wraps instead of stretching the tile */
   .grid.wide { grid-template-columns:1fr; }
   .grid.wide button { font-size:.85rem; line-height:1.3; padding:8px 6px;
                       overflow-wrap:anywhere; white-space:normal; }
 
-  .controls { background:var(--card); padding:14px; border-radius:16px; }
-  #save { background:var(--accent); width:100%; margin-top:14px; padding:14px; font-weight:700; }
-  .hint { font-size:.85rem; opacity:.7; margin:10px 0 0; }
+  /* tools under the photo */
+  .controls { background:var(--card); padding:14px; border-radius:20px; box-shadow:0 5px 0 var(--edge); }
+  .tools { display:flex; justify-content:space-around; align-items:flex-start; gap:6px; transition:opacity .15s; }
+  .controls.off .tools { opacity:.4; pointer-events:none; }
+  .tool { display:flex; flex-direction:column; align-items:center; gap:6px; font-size:.6rem; cursor:pointer; }
+  .tool button { width:46px; height:46px; padding:0; border-radius:50%; background:var(--soft); color:var(--ink);
+                 font-family:system-ui,sans-serif; font-size:1.1rem; box-shadow:0 3px 0 #b9acd9; }
+  .tool input[type=color] { -webkit-appearance:none; appearance:none; width:46px; height:46px; padding:0;
+                 border:3px solid #fff; border-radius:50%; background:none; cursor:pointer;
+                 box-shadow:0 0 0 2px var(--soft), 0 3px 0 2px #b9acd9; }
+  .tool input[type=color]::-webkit-color-swatch-wrapper { padding:0; }
+  .tool input[type=color]::-webkit-color-swatch { border:0; border-radius:50%; }
+  .tool input[type=color]::-moz-color-swatch { border:0; border-radius:50%; }
+  #save { background:var(--accent); width:100%; margin-top:16px; padding:15px; font-weight:700;
+          font-size:1.05rem; box-shadow:0 4px 0 #b83a74; }
+  #save:active { box-shadow:0 1px 0 #b83a74; }
   button:focus-visible, .btn:focus-within { outline:3px solid var(--accent); outline-offset:2px; }
 
   @media (min-width:700px) {
@@ -58,43 +95,49 @@
 </head>
 <body>
 <header>
-  <h1>Stickerbox</h1>
+  <h1><span>✧</span> Stickerbox <span>✧</span></h1>
   <p>Choose your stickers</p>
 </header>
 
 <main>
-  <div class="row">
+  <div class="row center">
     <label class="btn">Add photo<input id="photo" type="file" accept="image/*" hidden></label>
     <label class="btn alt">Add PNG<input id="png" type="file" accept="image/*" hidden></label>
   </div>
 
+  <div class="tabs" role="tablist">
+    <button class="tab on" data-tab="emoji">Emoji</button>
+    <button class="tab" data-tab="emoticons">Emoticons</button>
+    <button class="tab" data-tab="shapes">Shapes</button>
+  </div>
+
   <div class="editor">
-        <div class="stage" id="stage">
+    <div class="stage" id="stage">
       <canvas id="c" width="300" height="375"></canvas>
-            <button class="preview-btn" id="previewBtn" aria-label="Preview full photo" title="Preview full photo">⌞ ⌝</button>
+      <button class="preview-btn" id="previewBtn" aria-label="Preview full photo" title="Preview full photo">⌞ ⌝</button>
+      <div class="drop" id="drop">
+        <button id="dropBtn">＋ add a photo</button>
+        <span>or just add stickers ♡</span>
+      </div>
     </div>
     <aside class="stickers" aria-label="Stickers">
       <div class="scroll">
-        <h2>Emoji</h2>
         <div id="emoji" class="grid"></div>
-        <h2>Emoticons</h2>
-        <div id="emoticons" class="grid wide"></div>
-        <h2>Shapes</h2>
-        <div id="shapes" class="grid"></div>
+        <div id="emoticons" class="grid wide" hidden></div>
+        <div id="shapes" class="grid" hidden></div>
       </div>
     </aside>
   </div>
 
-  <section class="controls">
-    <div class="row">
-      <input id="color" type="color" value="#ffd84d" aria-label="Color">
-      <button class="alt" id="dup">Duplicate</button>
-      <button class="alt" id="front">Bring front</button>
-      <button class="alt" id="back">Send back</button>
-      <button class="alt" id="del">Delete</button>
+  <section class="controls off" id="controls">
+    <div class="tools">
+      <label class="tool"><input id="color" type="color" value="#ffd84d" aria-label="Color"><span>color</span></label>
+      <div class="tool"><button id="dup" aria-label="Duplicate">❐</button><span>copy</span></div>
+      <div class="tool"><button id="front" aria-label="Bring to front">▲</button><span>front</span></div>
+      <div class="tool"><button id="back" aria-label="Send to back">▼</button><span>back</span></div>
+      <div class="tool"><button id="del" aria-label="Delete">✕</button><span>delete</span></div>
     </div>
-    <p class="hint"></p>
-    <button id="save">Save image</button>
+    <button id="save">Save image ♡</button>
   </section>
 </main>
 
@@ -102,18 +145,21 @@
   <img id="previewImg" alt="Preview of your finished photo">
   <button class="alt" id="previewClose">Close</button>
 </div>
+
 <!-- Emoticon list: one per line. To add more, just add a new line. -->
 <script type="text/plain" id="emoticon-data">
 ꉂ(˵˃ ᗜ ˂˵)
 ♡ (˶ᵔ ᵕ ᵔ˶)
 ⸜(｡˃ ᵕ ˂ )⸝♡
 (╥﹏╥)
+૮⸝⸝> ﻌ <⸝⸝ა
 𐔌՞ ܸ.ˬ.ܸ՞𐦯
 .✦ ݁˖
 𑣲⋆ ⋆.𐙚 ̊
 𐙚⋆°｡⋆♡
 ⋆˚꩜｡
-⋆˚꩜｡𐔌՞. .՞𐦯⋆. 𐙚 ˚
+𐔌՞. .՞𐦯
+⋆. 𐙚 ˚
 ˚₊‧꒰ა ♡ ໒꒱ ‧₊˚
 ʕ̢·͡˔·Ɂ̡̣
 <33
@@ -122,10 +168,12 @@
 .ᐣ.ᐟ.ᐣ.ᐟ
 ૮ - ﻌ • ა
 ♥
+♡
+❤︎
 ≽^• ˕ • ྀི≼
 (⸝⸝> ᴗ•⸝⸝)
 ( ˘͈ ᵕ ˘͈♡)
->⩊
+(╥ ᴗ ╥)
 ( •̯́ ₃ •̯̀)
 (˶˃ᆺ˂˶)
 ₍ᐢ. .ᐢ₎
@@ -154,12 +202,36 @@
 ✶ ❁ ≖≖≖≖≖≖≖≖≖≖≖ ❁
 - ───── ☾ ─────•
 ୨୧
+⁉
+ツ
+˖ ݁♬⋆.˚𝄞
 ᯓ★
+꒰ ꒱
+☾ ⋆*･ﾟ
+.☘︎ ݁˖
+𓅦 ✧
+੯‧̀͡⬮\
+𖦹⁺˖ 🐾˖⁺𖦹
+𓃠
+₊˚.𓂃 ᶻz
+☕ 𓍢ִ໋ 𓍢ִ໋ 🥐 ✧˖°
+𑣲𝄞
+★彡
+꒰ ⑅ ʚ♡ɞ ⑅ ꒱
+˚ ༘ ☾ ｡ﾟ☁︎｡⋆
+𓆝 𓆟 𓆞 𓆝 𓆟
+˗ˏˋ ★ ˎˊ˗
+⋆｡˚ ☁︎ ˚｡⋆
+ﾟ+.ﾟ☆
+✩‧₊˚
+˗ˏˋ ♡ ˎˊ˗
+⋆⁺₊⋆ ☾⋆⁺₊⋆ ☆⋆｡𖦹°‧★
 ₍ˆ-⤙-ˆ₎
 ଘ( -.-` )ଓ
-=͟͟͞͞( •̀д•́)))
+=͟͟͞
 ₍ᐢ.‸.⑅ᐢ₎↝
 ᥥ⑅ᥥ
+݁ ˖Ი𐑼⋆
 ૮ • ·̫ • ა
 /ᐠ . ̫ .マ
 ₍ˆ‧˔‧ˆ₎
@@ -175,27 +247,17 @@
 ᯤ ᯅ ᯤ
 ᵋ ･֊･ ᵌ
 𐔌՞˶>˛<˶՞𐦯
-꒰ ꒱
-☾ ⋆*･ﾟ
-𓅦 ✧
-੯‧̀͡⬮\
-𖦹⁺˖ 🐾˖⁺𖦹
-𓃠
-₊˚.𓂃 ᶻz
-☕ 𓍢ִ໋ 𓍢ִ໋ 🥐 ✧˖°
-★彡
-꒰ ⑅ ʚ♡ɞ ⑅ ꒱
-˚ ༘ ☾ ｡ﾟ☁︎｡⋆｡ ﾟ☾ ﾟ｡⋆
-˗ˏˋ ★ ˎˊ˗
-⋆｡˚ ☁︎ ˚｡⋆
-ﾟ+.ﾟ☆
-✩‧₊˚
-˗ˏˋ ♡ ˎˊ˗
-⋆⁺₊⋆ ☾⋆⁺₊⋆ ☆⋆｡𖦹°‧★
+≽^- ˕ -^≼
+✿ ʕ •ᴥ•ʔ
 (" ⑉• •⑉)
+(˃ᆺ˂)
 ⌯'-'⌯
+=^._.^= ∫
+/ᐠ-ꞈ-ᐟ\
 ₍^⸝⸝ᴗ ᴗ⸝⸝^₎
+/ᐠ｡ꞈ｡ᐟ\
 ૮ ․ ․ ྀིა
+•ᴗ•
 </script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
@@ -211,8 +273,13 @@ fabric.Object.prototype.set({
 
 // state.aspect = photo width / height. exportW = width of the saved image.
 const state = { aspect: 4 / 5, exportW: 1080, bg: null };
-// Put the preview button on top of the photo (bottom-right corner)
-document.querySelector('.canvas-container').appendChild(document.getElementById('previewBtn'));
+
+// Put the preview button and the "add a photo" hint on top of the photo
+const cc = document.querySelector('.canvas-container');
+cc.appendChild(document.getElementById('previewBtn'));
+cc.appendChild(document.getElementById('drop'));
+document.getElementById('dropBtn').onclick = () => document.getElementById('photo').click();
+
 // Size the canvas to the photo's shape and the available space, and rescale stickers with it
 function layout() {
   const availW = stage.clientWidth - 16;
@@ -233,6 +300,7 @@ let lastWidth = window.innerWidth;
 window.addEventListener('resize', () => {
   if (window.innerWidth !== lastWidth) { lastWidth = window.innerWidth; layout(); }
 });
+
 // ---------- Full-photo preview ----------
 const previewEl = document.getElementById('preview');
 document.getElementById('previewBtn').onclick = () => {
@@ -254,6 +322,7 @@ function setPhoto(src) {
     img.set({ left: 0, top: 0, originX: 'left', originY: 'top' });
     state.bg = img;
     canvas.setBackgroundImage(img, () => {});
+    document.getElementById('drop').hidden = true;
     layout();
   });
 }
@@ -287,7 +356,15 @@ const SVG = (path, fill) =>
 const SHAPES = {
   star:    SVG('M50 5l14 31 33 4-25 23 7 33-29-17-29 17 7-33L3 40l33-4z', '#ffd84d'),
   sparkle: SVG('M50 0C54 30 70 46 100 50 70 54 54 70 50 100 46 70 30 54 0 50 30 46 46 30 50 0z', '#ffd84d'),
-  heart:   SVG('M50 90C10 60 0 40 0 28 0 12 12 2 26 2c10 0 20 6 24 14C54 8 64 2 74 2c14 0 26 10 26 26 0 12-10 32-50 62z', '#ff6b9a')
+  heart:   SVG('M50 90C10 60 0 40 0 28 0 12 12 2 26 2c10 0 20 6 24 14C54 8 64 2 74 2c14 0 26 10 26 26 0 12-10 32-50 62z', '#ff6b9a'),
+  circle:  SVG('M5 50a45 45 0 1 0 90 0a45 45 0 1 0 -90 0z', '#ff6b9a'),
+  moon:    SVG('M60 5a45 45 0 1 0 35 65A38 38 0 0 1 60 5z', '#ffd84d'),
+  cloud:   SVG('M13 47a20 20 0 1 0 40 0a20 20 0 1 0 -40 0zM33 34a22 22 0 1 0 44 0a22 22 0 1 0 -44 0zM58 50a17 17 0 1 0 34 0a17 17 0 1 0 -34 0zM33 50v17h42V50z', '#9fd8ff'),
+  flower:  SVG('M30 22a20 20 0 1 0 40 0a20 20 0 1 0 -40 0zM56.6 41.3a20 20 0 1 0 40 0a20 20 0 1 0 -40 0zM46.5 72.6a20 20 0 1 0 40 0a20 20 0 1 0 -40 0zM13.5 72.6a20 20 0 1 0 40 0a20 20 0 1 0 -40 0zM3.4 41.3a20 20 0 1 0 40 0a20 20 0 1 0 -40 0zM36 50a14 14 0 1 0 28 0a14 14 0 1 0 -28 0z', '#ffb3d1'),
+  paw:     SVG('M12 44a10 10 0 1 0 20 0a10 10 0 1 0 -20 0zM30 24a10 10 0 1 0 20 0a10 10 0 1 0 -20 0zM50 24a10 10 0 1 0 20 0a10 10 0 1 0 -20 0zM68 44a10 10 0 1 0 20 0a10 10 0 1 0 -20 0zM28 68a22 22 0 1 0 44 0a22 22 0 1 0 -44 0z', '#b79cff'),
+  cat:     SVG('M14 60a36 36 0 1 0 72 0a36 36 0 1 0 -72 0zM15 48L47 28L18 8zM85 48L82 8L53 28z', '#ffb3d1'),
+  bolt:    SVG('M58 3L18 55h26l-8 42 44-56H54z', '#ffd84d'),
+  diamond: SVG('M50 3L95 50L50 97L5 50z', '#9fd8ff')
 };
 function addShape(svg) {
   fabric.loadSVGFromString(svg, (objs, opts) => {
@@ -304,8 +381,8 @@ function recolor(obj, color) {
 
 // ---------- Build the sticker column ----------
 const emojiBox = document.getElementById('emoji');
-['✨','⭐','🌟','💫','💖','🎀','🌸','🦋','🐱','🐾','🔥','🍒','😎','🥹','☁️','🌙','🫶','🧿',
- '🍓','🌈','🎧','💌','👑','🪩','🕊️','🍀','🧸','💋','🌷','🫧','💗','🖤','🤍','❤︎']
+['✨','⭐','🌟','💫','💖','🎀','🌸','🦋','🐱','😺','🐾','🔥','🍒','😎','🥹','☁️','☁︎','🌙','🫶','🧿',
+ '🍓','🍒','🌈','🎧','💌','👑','🪩','🕊️','🍀','🧸','💋','🌷','🫧','💗','🖤','🤍']
   .forEach(ch => {
     const b = document.createElement('button');
     b.textContent = ch; b.onclick = () => addEmoji(ch); emojiBox.appendChild(b);
@@ -325,6 +402,16 @@ const shapeBox = document.getElementById('shapes');
 Object.entries(SHAPES).forEach(([name, svg]) => {
   const b = document.createElement('button');
   b.innerHTML = svg; b.title = name; b.onclick = () => addShape(svg); shapeBox.appendChild(b);
+});
+
+// ---------- Category tabs ----------
+const panels = { emoji: emojiBox, emoticons: emoticonBox, shapes: shapeBox };
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t === tab));
+    Object.entries(panels).forEach(([name, el]) => { el.hidden = name !== tab.dataset.tab; });
+    document.querySelector('.stickers .scroll').scrollTop = 0;
+  };
 });
 
 // ---------- Inputs ----------
@@ -365,6 +452,12 @@ document.getElementById('dup').onclick   = () => {
 window.addEventListener('keydown', e => {
   if ((e.key === 'Delete' || e.key === 'Backspace') && active() && !active().isEditing) canvas.remove(active());
 });
+
+// Tools look faded until a sticker is selected
+const controls = document.getElementById('controls');
+const syncTools = () => controls.classList.toggle('off', !active());
+['selection:created', 'selection:updated', 'selection:cleared'].forEach(ev => canvas.on(ev, syncTools));
+syncTools();
 
 // ---------- Save (full photo quality) ----------
 document.getElementById('save').onclick = async () => {
