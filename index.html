@@ -9,93 +9,250 @@
   * { box-sizing: border-box; }
   body { margin:0; background:var(--bg); color:var(--ink);
          font-family:"Avenir Next","Trebuchet MS",system-ui,sans-serif; }
-  header { padding:20px 16px 4px; max-width:900px; margin:0 auto; }
-  h1 { margin:0; font-size:1.8rem; }
-  header p { margin:4px 0 0; opacity:.75; }
-  main { display:flex; flex-wrap:wrap; gap:16px; padding:16px; max-width:900px; margin:0 auto; }
-  .stage { background:var(--card); padding:8px; border-radius:16px; align-self:flex-start; }
-  .panel { flex:1; min-width:260px; background:var(--card); padding:16px; border-radius:16px; }
-  h2 { font-size:1rem; margin:16px 0 8px; }
-  .row { display:flex; flex-wrap:wrap; gap:8px; }
+  header { padding:16px 12px 0; max-width:900px; margin:0 auto; }
+  h1 { margin:0; font-size:1.6rem; }
+  header p { margin:2px 0 0; opacity:.75; }
+  main { display:flex; flex-direction:column; gap:12px; padding:12px; max-width:900px; margin:0 auto; }
+  h2 { font-size:.85rem; margin:10px 0 6px; }
+  .row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
   .btn, button { font:inherit; border:0; border-radius:999px; padding:10px 16px; cursor:pointer;
                  background:var(--ink); color:#fff; }
   .btn.alt, button.alt { background:#e6defa; color:var(--ink); }
-  #save { background:var(--accent); width:100%; margin-top:20px; padding:14px; font-weight:700; }
-  .grid { display:flex; flex-wrap:wrap; gap:6px; }
-  .grid button { background:#f4f0ff; color:inherit; font-size:1.6rem; padding:6px 10px; border-radius:12px; }
-  .grid button svg { width:28px; height:28px; display:block; }
+
+  /* photo on the left, scrolling sticker column on the right */
+  .editor { display:flex; gap:10px; }
+  .stage { flex:1; min-width:0; min-height:280px; background:var(--card); padding:8px;
+           border-radius:16px; display:flex; justify-content:center; align-items:flex-start; }
+  .stickers { position:relative; width:128px; flex:none; background:var(--card); border-radius:16px; }
+  .stickers .scroll { position:absolute; inset:0; overflow-y:auto; padding:4px 8px 8px;
+                      -webkit-overflow-scrolling:touch; }
+  .grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:6px; }
+  .grid button { background:#f4f0ff; color:inherit; font-size:1.5rem; line-height:1.2;
+                 padding:6px 0; border-radius:12px; }
+  .grid button svg { width:26px; height:26px; display:block; margin:0 auto; }
+  /* emoticons: one per row, text wraps instead of stretching the tile */
+  .grid.wide { grid-template-columns:1fr; }
+  .grid.wide button { font-size:.85rem; line-height:1.3; padding:8px 6px;
+                      overflow-wrap:anywhere; white-space:normal; }
+
+  .controls { background:var(--card); padding:14px; border-radius:16px; }
+  #save { background:var(--accent); width:100%; margin-top:14px; padding:14px; font-weight:700; }
   .hint { font-size:.85rem; opacity:.7; margin:10px 0 0; }
   button:focus-visible, .btn:focus-within { outline:3px solid var(--accent); outline-offset:2px; }
+
+  @media (min-width:700px) {
+    .stickers { width:240px; }
+    .grid { grid-template-columns:repeat(4, 1fr); }
+    .grid.wide { grid-template-columns:repeat(2, 1fr); }
+  }
 </style>
 </head>
 <body>
 <header>
   <h1>Stickerbox</h1>
-  <p>Put stars, emoji and PNGs on your photo, then save it. No login.</p>
+  <p>Choose your stickers</p>
 </header>
 
 <main>
-  <div class="stage"><canvas id="c" width="360" height="640"></canvas></div>
+  <div class="row">
+    <label class="btn">Add photo<input id="photo" type="file" accept="image/*" hidden></label>
+    <label class="btn alt">Add PNG<input id="png" type="file" accept="image/*" hidden></label>
+  </div>
 
-  <section class="panel">
+  <div class="editor">
+    <div class="stage" id="stage"><canvas id="c" width="300" height="375"></canvas></div>
+    <aside class="stickers" aria-label="Stickers">
+      <div class="scroll">
+        <h2>Emoji</h2>
+        <div id="emoji" class="grid"></div>
+        <h2>Emoticons</h2>
+        <div id="emoticons" class="grid wide"></div>
+        <h2>Shapes</h2>
+        <div id="shapes" class="grid"></div>
+      </div>
+    </aside>
+  </div>
+
+  <section class="controls">
     <div class="row">
-      <label class="btn">Add photo<input id="photo" type="file" accept="image/*" hidden></label>
-      <label class="btn alt">Add PNG<input id="png" type="file" accept="image/*" hidden></label>
-    </div>
-    <p class="hint">Copied a PNG from X? Click this page and press Cmd+V (Ctrl+V on Windows).</p>
-
-    <h2>Emoji</h2>
-    <div id="emoji" class="grid"></div>
-
-    <h2>Shapes</h2>
-    <div id="shapes" class="grid"></div>
-
-    <h2>Selected sticker</h2>
-    <div class="row">
-      <input id="color" type="color" value="#ffd84d" aria-label="Shape color">
+      <input id="color" type="color" value="#ffd84d" aria-label="Color">
       <button class="alt" id="dup">Duplicate</button>
       <button class="alt" id="front">Bring front</button>
       <button class="alt" id="back">Send back</button>
       <button class="alt" id="del">Delete</button>
     </div>
-    <p class="hint">Color works on the Shapes. Drag corners to resize, top handle to rotate.</p>
-
+    <p class="hint">Color works on Shapes and Emoticons. Drag corners to resize, top handle to rotate.</p>
     <button id="save">Save image</button>
   </section>
 </main>
 
+<!-- Emoticon list: one per line. To add more, just add a new line. -->
+<script type="text/plain" id="emoticon-data">
+ꉂ(˵˃ ᗜ ˂˵)
+♡ (˶ᵔ ᵕ ᵔ˶)
+⸜(｡˃ ᵕ ˂ )⸝♡
+(╥﹏╥)
+𐔌՞ ܸ.ˬ.ܸ՞𐦯
+.✦ ݁˖
+𑣲⋆ ⋆.𐙚 ̊
+𐙚⋆°｡⋆♡
+⋆˚꩜｡
+⋆˚꩜｡𐔌՞. .՞𐦯⋆. 𐙚 ˚
+˚₊‧꒰ა ♡ ໒꒱ ‧₊˚
+ʕ̢·͡˔·Ɂ̡̣
+<33
+<3
+｡·͜·｡
+.ᐣ.ᐟ.ᐣ.ᐟ
+૮ - ﻌ • ა
+♥
+≽^• ˕ • ྀི≼
+(⸝⸝> ᴗ•⸝⸝)
+( ˘͈ ᵕ ˘͈♡)
+>⩊
+( •̯́ ₃ •̯̀)
+(˶˃ᆺ˂˶)
+₍ᐢ. .ᐢ₎
+₊˚⊹♡
+❀ ⋆˚✿˖°
+(๑˃ᴗ˂)ﻭ
+꙳⸌♡⸍꙳
+ʕ ˵• ₒ •˵ ʔ
+⟡ ˖ ࣪⭑ 🎧 ⟡ ˖ ࣪
+☾.˖
+εїз
+ఇ
+⊂₍ •ᴥ• ₎っ
+૮₍´｡･⩊･ ｡`₎ა
+♡𓐍𓏸  ꫂ❁ ✮⋆˙
+( 〃 ❛ᴗ❛ 〃 )
+ᑦ꒰ • ༝ •  ྀྀི꒱ᐣ
+꒰🤍꒱
+₍ᵔ·͈༝·͈ᵔ₎
+🫧𓇼𓏲*ੈ✩‧₊˚🎐
+🐇 ⸝⸝♡ 🤍・ ˚ ✦ .
+ᕱ ⑅ ᕱ₊ 𑣲
+₍ ᐢ. .ᐢ₎
+ᜊ♡ᜊ
+ఇ ♡̴  ♡̴.
+✶ ❁ ≖≖≖≖≖≖≖≖≖≖≖ ❁
+- ───── ☾ ─────•
+୨୧
+ᯓ★
+₍ˆ-⤙-ˆ₎
+ଘ( -.-` )ଓ
+=͟͟͞͞( •̀д•́)))
+₍ᐢ.‸.⑅ᐢ₎↝
+ᥥ⑅ᥥ
+૮ • ·̫ • ა
+/ᐠ . ̫ .マ
+₍ˆ‧˔‧ˆ₎
+꒰°͈ ᵋ °͈ ꒱↝
+｡ˆ⸝⸝. ݂ .⸝⸝ˆ𓈒ׁ♡
+૮ ・ﻌ・ა
+( ⸝⸝ᵕᴗᵕ⸝⸝ )
+( ˃̣̣o˂̣̣ )
+ᓚᘏᗢ
+ʕ•ᴥ•ʔ
+૮₍ ˶ᵔ ᵕ ᵔ˶ ₎ა
+- ̆ . •̆
+ᯤ ᯅ ᯤ
+ᵋ ･֊･ ᵌ
+𐔌՞˶>˛<˶՞𐦯
+꒰ ꒱
+☾ ⋆*･ﾟ
+𓅦 ✧
+੯‧̀͡⬮\
+𖦹⁺˖ 🐾˖⁺𖦹
+𓃠
+₊˚.𓂃 ᶻz
+☕ 𓍢ִ໋ 𓍢ִ໋ 🥐 ✧˖°
+★彡
+꒰ ⑅ ʚ♡ɞ ⑅ ꒱
+˚ ༘ ☾ ｡ﾟ☁︎｡⋆｡ ﾟ☾ ﾟ｡⋆
+˗ˏˋ ★ ˎˊ˗
+⋆｡˚ ☁︎ ˚｡⋆
+ﾟ+.ﾟ☆
+✩‧₊˚
+˗ˏˋ ♡ ˎˊ˗
+⋆⁺₊⋆ ☾⋆⁺₊⋆ ☆⋆｡𖦹°‧★
+(" ⑉• •⑉)
+⌯'-'⌯
+₍^⸝⸝ᴗ ᴗ⸝⸝^₎
+૮ ․ ․ ྀིა
+</script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 <script>
-const W = 360, H = 640; // 9:16, exported at 3x = 1080x1920 (IG story size)
 const canvas = new fabric.Canvas('c', { preserveObjectStacking: true });
+const stage = document.getElementById('stage');
 
-// Shrink the canvas on small screens (CSS only, export stays full size)
-function fit() {
-  const s = Math.min(1, (window.innerWidth - 48) / W);
-  canvas.setDimensions({ width: (W * s) + 'px', height: (H * s) + 'px' }, { cssOnly: true });
+// Bigger, easier-to-grab handles on phones
+fabric.Object.prototype.set({
+  cornerSize: 16, touchCornerSize: 32, transparentCorners: false,
+  cornerStyle: 'circle', cornerColor: '#ff5fa2', borderColor: '#ff5fa2'
+});
+
+// state.aspect = photo width / height. exportW = width of the saved image.
+const state = { aspect: 4 / 5, exportW: 1080, bg: null };
+
+// Size the canvas to the photo's shape and the available space, and rescale stickers with it
+function layout() {
+  const availW = stage.clientWidth - 16;
+  const maxH = Math.min(window.innerHeight * 0.6, 560);
+  const w = Math.max(120, Math.round(Math.min(availW, maxH * state.aspect)));
+  const h = Math.round(w / state.aspect);
+  const rx = w / canvas.getWidth(), ry = h / canvas.getHeight();
+  if (Math.abs(rx - 1) > 0.001 || Math.abs(ry - 1) > 0.001) {
+    canvas.getObjects().forEach(o => {
+      o.scaleX *= rx; o.scaleY *= rx; o.left *= rx; o.top *= ry; o.setCoords();
+    });
+  }
+  canvas.setDimensions({ width: w, height: h });
+  if (state.bg) state.bg.set({ scaleX: w / state.bg.width, scaleY: h / state.bg.height });
+  canvas.requestRenderAll();
 }
-window.addEventListener('resize', fit); fit();
+let lastWidth = window.innerWidth;
+window.addEventListener('resize', () => {
+  if (window.innerWidth !== lastWidth) { lastWidth = window.innerWidth; layout(); }
+});
 
 // ---------- Photo (background) ----------
 function setPhoto(src) {
   fabric.Image.fromURL(src, img => {
-    const s = Math.max(W / img.width, H / img.height); // cover the canvas
-    img.set({ scaleX: s, scaleY: s, left: W / 2, top: H / 2, originX: 'center', originY: 'center' });
-    canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas));
+    const k = Math.min(1, 2160 / Math.max(img.width, img.height));
+    state.aspect = img.width / img.height;
+    state.exportW = Math.round(img.width * k);
+    img.set({ left: 0, top: 0, originX: 'left', originY: 'top' });
+    state.bg = img;
+    canvas.setBackgroundImage(img, () => {});
+    layout();
   });
 }
 
 // ---------- Stickers ----------
 function place(obj, width) {
   if (width) obj.scaleToWidth(width);
-  obj.set({ left: W / 2, top: H / 2, originX: 'center', originY: 'center' });
+  obj.set({ left: canvas.getWidth() / 2, top: canvas.getHeight() / 2, originX: 'center', originY: 'center' });
   canvas.add(obj); canvas.setActiveObject(obj); canvas.requestRenderAll();
 }
 function addPng(src) {
-  fabric.Image.fromURL(src, img => place(img, 120));
+  fabric.Image.fromURL(src, img => place(img, canvas.getWidth() * 0.35));
 }
 function addEmoji(ch) {
-  place(new fabric.Text(ch, { fontSize: 80 }));
+  place(new fabric.Text(ch, { fontSize: Math.round(canvas.getWidth() * 0.2) }));
+}
+// Emoticons: sized to fit the photo (short ones stay small, long ones shrink to ~half the width)
+function addEmoticon(str) {
+  const t = new fabric.Text(str, {
+    fontSize: 40, fontFamily: 'system-ui, sans-serif', textAlign: 'center', fill: '#ffffff',
+    shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.35)', blur: 4, offsetX: 0, offsetY: 1 })
+  });
+  const cw = canvas.getWidth();
+  const scale = Math.min((cw * 0.5) / t.width, (cw * 0.14) / 40);
+  t.scale(scale);
+  t.isShape = true; // recolorable with the color picker
+  place(t);
 }
 const SVG = (path, fill) =>
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="${path}" fill="${fill}"/></svg>`;
@@ -108,7 +265,7 @@ function addShape(svg) {
   fabric.loadSVGFromString(svg, (objs, opts) => {
     const g = fabric.util.groupSVGElements(objs, opts);
     g.isShape = true;
-    place(g, 110);
+    place(g, canvas.getWidth() * 0.25);
   });
 }
 function recolor(obj, color) {
@@ -117,13 +274,25 @@ function recolor(obj, color) {
   canvas.requestRenderAll();
 }
 
-// ---------- Build the pickers ----------
+// ---------- Build the sticker column ----------
 const emojiBox = document.getElementById('emoji');
-['✨','⭐','🌟','💫','💖','🎀','🌸','🦋','🐱','🐾','🔥','🍒','😎','🥹','☁️','🌙','🫶','🧿']
+['✨','⭐','🌟','💫','💖','🎀','🌸','🦋','🐱','🐾','🔥','🍒','😎','🥹','☁️','🌙','🫶','🧿',
+ '🍓','🌈','🎧','💌','👑','🪩','🕊️','🍀','🧸','💋','🌷','🫧','💗','🖤','🤍','❤︎']
   .forEach(ch => {
     const b = document.createElement('button');
     b.textContent = ch; b.onclick = () => addEmoji(ch); emojiBox.appendChild(b);
   });
+
+const emoticonBox = document.getElementById('emoticons');
+const emoticons = [...new Set(
+  document.getElementById('emoticon-data').textContent
+    .split('\n').map(s => s.trim()).filter(Boolean)
+)];
+emoticons.forEach(str => {
+  const b = document.createElement('button');
+  b.textContent = str; b.onclick = () => addEmoticon(str); emoticonBox.appendChild(b);
+});
+
 const shapeBox = document.getElementById('shapes');
 Object.entries(SHAPES).forEach(([name, svg]) => {
   const b = document.createElement('button');
@@ -137,13 +306,15 @@ document.getElementById('photo').onchange = e => {
 document.getElementById('png').onchange = e => {
   const f = e.target.files[0]; if (f) addPng(URL.createObjectURL(f));
 };
-// Paste a copied image (or emoji text) straight in
+// Paste a copied image, emoji or emoticon straight in
 window.addEventListener('paste', e => {
   const items = [...(e.clipboardData?.items || [])];
   const img = items.find(i => i.type.startsWith('image/'));
   if (img) { addPng(URL.createObjectURL(img.getAsFile())); return; }
   const text = e.clipboardData?.getData('text')?.trim();
-  if (text) addEmoji(text.slice(0, 8));
+  if (!text) return;
+  const isEmoji = Array.from(text).length <= 4 && /\p{Extended_Pictographic}/u.test(text);
+  isEmoji ? addEmoji(text) : addEmoticon(text.slice(0, 80));
 });
 // Drag and drop a photo onto the page
 window.addEventListener('dragover', e => e.preventDefault());
@@ -161,16 +332,16 @@ document.getElementById('back').onclick  = () => { const o = active(); if (o) { 
 document.getElementById('del').onclick   = () => { const o = active(); if (o) canvas.remove(o); };
 document.getElementById('dup').onclick   = () => {
   const o = active(); if (!o) return;
-  o.clone(c => { c.isShape = o.isShape; c.set({ left: o.left + 20, top: o.top + 20 }); canvas.add(c); canvas.setActiveObject(c); });
+  o.clone(c => { c.isShape = o.isShape; c.set({ left: o.left + 15, top: o.top + 15 }); canvas.add(c); canvas.setActiveObject(c); });
 };
 window.addEventListener('keydown', e => {
   if ((e.key === 'Delete' || e.key === 'Backspace') && active() && !active().isEditing) canvas.remove(active());
 });
 
-// ---------- Save ----------
+// ---------- Save (full photo quality) ----------
 document.getElementById('save').onclick = async () => {
   canvas.discardActiveObject().renderAll();
-  const url = canvas.toDataURL({ format: 'png', multiplier: 3 });
+  const url = canvas.toDataURL({ format: 'png', multiplier: state.exportW / canvas.getWidth() });
   const blob = await (await fetch(url)).blob();
   const file = new File([blob], 'stickerbox.png', { type: 'image/png' });
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -178,6 +349,9 @@ document.getElementById('save').onclick = async () => {
   }
   const a = document.createElement('a'); a.href = url; a.download = 'stickerbox.png'; a.click();
 };
+
+layout();
+window.addEventListener('load', layout);
 </script>
 </body>
 </html>
