@@ -21,14 +21,12 @@
 
   /* photo on the left, scrolling sticker column on the right */
   .editor { display:flex; gap:10px; }
-    .stage { flex:1; min-width:0; min-height:280px; background:var(--card); padding:8px;
-           border-radius:16px; display:flex; flex-direction:column; align-items:center; gap:8px; }
-  .preview-btn { width:40px; height:40px; padding:0; border-radius:50%; background:var(--accent);
-                 font-size:1.1rem; line-height:1; display:grid; place-items:center; flex:none; }
-  #preview { position:fixed; inset:0; z-index:10; background:rgba(20,12,35,.92); display:none;
-             flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:16px; }
-  #preview.open { display:flex; }
-  #preview img { max-width:100%; max-height:calc(100% - 70px); object-fit:contain; border-radius:12px; }
+      .stage { flex:1; min-width:0; min-height:280px; background:var(--card); padding:8px;
+           border-radius:16px; display:flex; justify-content:center; align-items:flex-start; }
+  .preview-btn { position:absolute; right:8px; bottom:8px; z-index:5; width:26px; height:26px;
+                 padding:0; border:0; border-radius:50%; background:rgba(0,0,0,.45); color:#fff;
+                 font-size:12px; line-height:1; white-space:nowrap; display:grid; place-items:center; }
+
   .stickers { position:relative; width:128px; flex:none; background:var(--card); border-radius:16px; }
   .stickers .scroll { position:absolute; inset:0; overflow-y:auto; padding:4px 8px 8px;
                       -webkit-overflow-scrolling:touch; }
@@ -68,7 +66,7 @@
   <div class="editor">
         <div class="stage" id="stage">
       <canvas id="c" width="300" height="375"></canvas>
-      <button class="preview-btn" id="previewBtn" aria-label="Preview full photo" title="Preview full photo">🔍</button>
+            <button class="preview-btn" id="previewBtn" aria-label="Preview full photo" title="Preview full photo">⌞ ⌝</button>
     </div>
     <aside class="stickers" aria-label="Stickers">
       <div class="scroll">
@@ -208,7 +206,8 @@ fabric.Object.prototype.set({
 
 // state.aspect = photo width / height. exportW = width of the saved image.
 const state = { aspect: 4 / 5, exportW: 1080, bg: null };
-
+// Put the preview button on top of the photo (bottom-right corner)
+document.querySelector('.canvas-container').appendChild(document.getElementById('previewBtn'));
 // Size the canvas to the photo's shape and the available space, and rescale stickers with it
 function layout() {
   const availW = stage.clientWidth - 16;
