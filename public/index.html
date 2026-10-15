@@ -371,6 +371,11 @@ function addEmoticon(str) {
 }
 const SVG = (path, fill) =>
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="${path}" fill="${fill}"/></svg>`;
+
+  // Same as SVG, but with a rounded outline so corners look soft
+const SVGR = (path, fill) =>
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="${path}" fill="${fill}" stroke="${fill}" stroke-width="6" stroke-linejoin="round"/></svg>`;
+
 const SHAPES = {
   star:    SVG('M50 5l14 31 33 4-25 23 7 33-29-17-29 17 7-33L3 40l33-4z', '#ffd84d'),
   sparkle: SVG('M50 0C54 30 70 46 100 50 70 54 54 70 50 100 46 70 30 54 0 50 30 46 46 30 50 0z', '#ffd84d'),
@@ -386,11 +391,25 @@ const SHAPES = {
   blush3:  SVG('M19.2 79.7L35.2 29.7A5.5 5.5 0 0 0 24.8 26.3L8.8 76.3A5.5 5.5 0 0 0 19.2 79.7zM45.2 79.7L61.2 29.7A5.5 5.5 0 0 0 50.8 26.3L34.8 76.3A5.5 5.5 0 0 0 45.2 79.7zM71.2 79.7L87.2 29.7A5.5 5.5 0 0 0 76.8 26.3L60.8 76.3A5.5 5.5 0 0 0 71.2 79.7z', '#ff8fb8'),
   blush2:  SVG('M32.2 79.7L48.2 29.7A5.5 5.5 0 0 0 37.8 26.3L21.8 76.3A5.5 5.5 0 0 0 32.2 79.7zM58.2 79.7L74.2 29.7A5.5 5.5 0 0 0 63.8 26.3L47.8 76.3A5.5 5.5 0 0 0 58.2 79.7z', '#ff8fb8'),
   glowcircle: SVG('M10 50a40 40 0 1 0 80 0a40 40 0 1 0 -80 0z', '#fff3b0'),
-  glowoval:   SVG('M22 50a28 40 0 1 0 56 0a28 40 0 1 0 -56 0z', '#ffc2dd')
+  glowoval:   SVG('M22 50a28 40 0 1 0 56 0a28 40 0 1 0 -56 0z', '#ffc2dd'),
+    glowoval:   SVG('M22 50a28 40 0 1 0 56 0a28 40 0 1 0 -56 0z', '#ffc2dd'),
+  bow:        SVGR('M50 50L8 22L8 78ZM92 78L92 22L50 50ZM39 50a11 11 0 1 0 22 0a11 11 0 1 0 -22 0z', '#ff8fb8'),
+  butterfly:  SVG('M8 35a24 24 0 1 0 48 0a24 24 0 1 0 -48 0zM44 35a24 24 0 1 0 48 0a24 24 0 1 0 -48 0zM19 68a17 17 0 1 0 34 0a17 17 0 1 0 -34 0zM47 68a17 17 0 1 0 34 0a17 17 0 1 0 -34 0zM45.5 50a4.5 32 0 1 0 9 0a4.5 32 0 1 0 -9 0z', '#b79cff'),
+  crown:      SVGR('M90 80L90 30L70 52L50 16L30 52L10 30L10 80Z', '#ffd84d'),
+  bunnyears:  SVG('M20.3 52.7A13 38 -12 1 0 45.7 47.3A13 38 -12 1 0 20.3 52.7zM28.1 53A5 24 -12 1 1 37.9 51A5 24 -12 1 1 28.1 53zM54.3 47.3A13 38 12 1 0 79.7 52.7A13 38 12 1 0 54.3 47.3zM62.1 51A5 24 12 1 1 71.9 53A5 24 12 1 1 62.1 51z', '#ffc2dd'),
+  teardrop:   SVG('M50 6C50 6 18 44 18 64a32 32 0 0 0 64 0C82 44 50 6 50 6z', '#9fd8ff'),
+  ring:       SVG('M6 50a44 44 0 1 0 88 0a44 44 0 1 0 -88 0zM26 50a24 24 0 1 1 48 0a24 24 0 1 1 -48 0z', '#ffd84d'),
+  speech:     SVG('M71 15H29A14 14 0 0 0 15 29V51A14 14 0 0 0 29 65H32L24 88L48 65H71A14 14 0 0 0 85 51V29A14 14 0 0 0 71 15zM30 40a5 5 0 1 1 10 0a5 5 0 1 1 -10 0zM45 40a5 5 0 1 1 10 0a5 5 0 1 1 -10 0zM60 40a5 5 0 1 1 10 0a5 5 0 1 1 -10 0z', '#9fd8ff'),
+  dots3:      SVG('M10 50a10 10 0 1 0 20 0a10 10 0 1 0 -20 0zM40 50a10 10 0 1 0 20 0a10 10 0 1 0 -20 0zM70 50a10 10 0 1 0 20 0a10 10 0 1 0 -20 0z', '#ff8fb8'),
+  sparkles:   SVG('M40 24Q40 60 4 60Q40 60 40 96Q40 60 76 60Q40 60 40 24zM76 8Q76 26 58 26Q76 26 76 44Q76 26 94 26Q76 26 76 8zM78 64Q78 76 66 76Q78 76 78 88Q78 76 90 76Q78 76 78 64z', '#ffd84d'),
+  note:       SVGR('M17 76a15 15 0 1 0 30 0a15 15 0 1 0 -30 0zM54 76L54 35L82 46L82 26L44 14L44 76Z', '#b79cff'),
+  heartoutline: SVG('M50 90C10 60 0 40 0 28C0 12 12 2 26 2C36 2 46 8 50 16C54 8 64 2 74 2C88 2 100 12 100 28C100 40 90 60 50 90zM50 70.7C72 54.1 77.5 43.1 77.5 36.5C77.5 27.8 70.9 22.2 63.2 22.2C57.7 22.2 52.2 25.5 50 29.9C47.8 25.5 42.3 22.2 36.8 22.2C29.1 22.2 22.5 27.8 22.5 36.5C22.5 43.1 28 54.1 50 70.7z', '#ff6b9a'),
+  bear:       SVG('M8 28a14 14 0 1 0 28 0a14 14 0 1 0 -28 0zM64 28a14 14 0 1 0 28 0a14 14 0 1 0 -28 0zM14 58a36 36 0 1 0 72 0a36 36 0 1 0 -72 0zM32.5 54a4.5 4.5 0 1 1 9 0a4.5 4.5 0 1 1 -9 0zM58.5 54a4.5 4.5 0 1 1 9 0a4.5 4.5 0 1 1 -9 0zM45 68a5 5 0 1 1 10 0a5 5 0 1 1 -10 0z', '#d9b38c')
+  
 };
 
 // Shapes that glow (name: glow color)
-const GLOW = { glowcircle: '#fff3b0', glowoval: '#ffc2dd' };
+const GLOW = { glowcircle: '#fff3b0', glowoval: '#ffc2dd', sparkles: '#ffd84d' };
 
 function addShape(svg, name) {
   fabric.loadSVGFromString(svg, (objs, opts) => {
